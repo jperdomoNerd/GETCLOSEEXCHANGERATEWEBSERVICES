@@ -20,13 +20,12 @@ async function getTend() {
       }
     );
 
+    return true;
+
     const values = await page.$$eval(
       '.bi_viz_gridview_cell_text_nowrap',
       els => els.map(e => e.innerText.trim())
     );
-
-    // const todayExchangeRate = parseFloat(values[5].replace(',', '.'));
-    // const closingExchangeRate = parseFloat(values[13].replace(',', '.'));
 
     const todayExchangeRate   = parseFloat(values[5].replace(',', ''));
     const closingExchangeRate = parseFloat(values[13].replace(',', ''));
