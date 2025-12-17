@@ -25,8 +25,11 @@ async function getTend() {
       els => els.map(e => e.innerText.trim())
     );
 
-    const todayExchangeRate = parseFloat(values[4].replace(',', '.'));
-    const closingExchangeRate = parseFloat(values[13].replace(',', '.'));
+    // const todayExchangeRate = parseFloat(values[5].replace(',', '.'));
+    // const closingExchangeRate = parseFloat(values[13].replace(',', '.'));
+
+    const todayExchangeRate   = parseFloat(values[5].replace(',', ''));
+    const closingExchangeRate = parseFloat(values[13].replace(',', ''));
 
     return {
       todayExchangeRate,
@@ -38,8 +41,8 @@ async function getTend() {
 }
 
 //routing path
-app.get('/', (req, res) => {
-  res.send(getTend());
+app.get('/', async (req, res) => {
+  res.send(await getTend());
 });
 
 // Start the server
