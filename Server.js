@@ -4,11 +4,7 @@ const puppeteer = require('puppeteer')
 const app = express();
 
 async function getTend() {
-  const browser = await puppeteer.launch({
-    headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
-  });
-
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
   await page.goto(
