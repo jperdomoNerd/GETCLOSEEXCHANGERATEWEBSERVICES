@@ -9,6 +9,8 @@ async function getTend() {
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
+  return true;
+
   try {
     const page = await browser.newPage();
 
@@ -19,8 +21,6 @@ async function getTend() {
         timeout: 120000
       }
     );
-
-    return true;
 
     const values = await page.$$eval(
       '.bi_viz_gridview_cell_text_nowrap',
