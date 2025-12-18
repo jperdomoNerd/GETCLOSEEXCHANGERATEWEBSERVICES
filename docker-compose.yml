@@ -1,0 +1,15 @@
+services:
+  puppeteer-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scrapping_container
+    ports:
+      - "3000:3000"
+    # IMPORTANTE: Limpia procesos de Chrome colgados para evitar Timeouts
+    init: true
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"

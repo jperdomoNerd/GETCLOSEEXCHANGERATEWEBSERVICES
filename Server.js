@@ -7,19 +7,13 @@ const app = express();
 
 async function getTend() {
   const browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
-      '--single-process',
-      '--no-zygote',
-      '--disable-background-networking',
-      '--disable-background-timer-throttling',
-      '--disable-backgrounding-occluded-windows',
-      '--disable-renderer-backgrounding',
-      '--disk-cache-size=0'
+      '--single-process'
     ],
     executablePath:
       process.env.NODE_ENV === "production"
@@ -29,13 +23,18 @@ async function getTend() {
 
   const page = await browser.newPage();
 
+  page.setDefaultNavigationTimeout(60000);
+  page.setDefaultTimeout(60000);
+
   await page.goto(
     'https://suameca.banrep.gov.co/estadisticas-economicas-back/reporte-oac.html?path=%2FEstadisticas_Banco_de_la_Republica%2F4_Sector_Externo_tasas_de_cambio_y_derivados%2F1_Tasas_de_cambio%2F1_Tasa_de_cambio_del_peso_colombiano_por_USD(TRM)%2F2_Mercado_Interbancario_de_Divisas%2F1_Mercado_interbancario_de_divisas',
     {
-      waitUntil: 'networkidle0',
+      waitUntil: 'domcontentloaded',
       timeout: 120000
     }
   );
+
+  console.log("Funciona")
 
   const values = await page.$$eval(
     '.bi_viz_gridview_cell_text_nowrap',
