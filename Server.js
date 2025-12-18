@@ -1,7 +1,8 @@
 import puppeteer from 'puppeteer';
 import express from 'express';
+import dotenv from "dotenv";
 
-
+dotenv.config();
 const app = express();
 
 async function getTend() {
@@ -11,7 +12,11 @@ async function getTend() {
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage'
-    ]
+    ],
+      executablePath:
+      process.env.NODE_ENV === "production"
+        ? process.env.PUPPETEER_EXECUTABLE_PATH
+        : puppeteer.executablePath(),
   });
 
   const page = await browser.newPage();
