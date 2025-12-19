@@ -1,67 +1,61 @@
-import puppeteer from 'puppeteer-core';
 import express from 'express';
 import dotenv from "dotenv";
+import ScraperService from './ScraperService.js';
+import CacheService from './CacheService.js';
 
 dotenv.config();
+
+// --- Configuración de Express ---
 const app = express();
+const scraper = new ScraperService();
 
-async function getTend() {
+// Ruta para conocer la disponibilidad del servidor
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
-  const browser = await puppeteer.launch({
-    headless: "new",
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--single-process',
-      '--no-zygote'
-    ],
-  });
-
-  const page = await browser.newPage();
-
-  await page.goto(
-    'https://suameca.banrep.gov.co/estadisticas-economicas-back/reporte-oac.html?path=%2FEstadisticas_Banco_de_la_Republica%2F4_Sector_Externo_tasas_de_cambio_y_derivados%2F1_Tasas_de_cambio%2F1_Tasa_de_cambio_del_peso_colombiano_por_USD(TRM)%2F2_Mercado_Interbancario_de_Divisas%2F1_Mercado_interbancario_de_divisas',
-    {
-      waitUntil: 'networkidle0',
-      timeout: 120000
-    }
-  );
-
-  const values = await page.$$eval(
-    '.bi_viz_gridview_cell_text_nowrap',
-    els => els.map(e => e.innerText.trim())
-  );
-
-  console.log(values)
-
-  const todayExchangeRate = parseFloat(values[5].replace(',', ''));
-  const closingExchangeRate = parseFloat(values[13].replace(',', ''));
-
-  return {
-    todayExchangeRate,
-    closingExchangeRate
-  };
-  // } finally {
-  //   await browser.close();
-  // }
-}
-
-// routing
-app.get('/', async (req, res) => {
+// Ruta de caché: Valida si han pasado 6 horas antes de decidir si scrapear o no
+app.get('/exchange-rate', async (req, res) => {
   try {
-    const data = await getTend();
-    res.json(data);
+    let cache = await CacheService.get();
+    let needsUpdate = false;
+
+    if (cache && cache.updatedAt) {
+      const lastUpdate = new Date(cache.updatedAt);
+      const now = new Date();
+      
+      // Cálculo de la diferencia de tiempo en milisegundos a horas
+      const diffInMs = now - lastUpdate;
+      const diffInHours = diffInMs / (1000 * 60 * 60);
+
+      console.log(`Horas transcurridas desde la última actualización: ${diffInHours.toFixed(2)}`);
+
+      // Condición de 6 horas
+      if (diffInHours >= 6) {
+        needsUpdate = true;
+      }
+    } else {
+      // Si el archivo no existe o está corrupto, forzar actualización
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      console.log("El caché expiró o no existe. Actualizando datos mediante scraping...");
+      const freshData = await scraper.getTend();
+      res.json({ ...freshData, info: "Datos actualizados mediante scraping" });
+    } else {
+      res.json({ ...cache, info: "Datos recuperados del caché local" });
+    }
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Error al procesar la solicitud de datos' });
   }
 });
 
-// start server
-const PORT = process.env.PORT || 3000;
 
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server started on port 3000');
+  console.log(`Server started on port ${PORT}`);
 });

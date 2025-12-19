@@ -23,4 +23,4 @@ COPY . .
 # Puerto de Render
 EXPOSE 3000
 
-CMD [ "node", "Server.js" ]
+CMD ["node", "--max-old-space-size=384", "Server.js"]

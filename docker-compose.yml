@@ -6,9 +6,13 @@ services:
     container_name: scrapping_container
     ports:
       - "3000:3000"
+
+    volumes:
+      #Guarda el archivo cacheado
+      - ./scraper_data:/usr/src/app/scraper_data
+    restart: always
     # IMPORTANTE: Limpia procesos de Chrome colgados para evitar Timeouts
     init: true
-    restart: unless-stopped
     logging:
       driver: "json-file"
       options:
